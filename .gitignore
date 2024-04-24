@@ -5,3 +5,8 @@
 /tools/logs/
 
 .idea
+
+*.txt
+*.png
+
+*.pth
