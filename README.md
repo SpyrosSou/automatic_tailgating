@@ -113,7 +113,7 @@ network. Finally, a link to some BEV images (explanation later in this README) h
 ## Download Links
 
 * [Link to weights (.pth file)](https://we.tl/t-yHCbOhWDx3)
-* [Link to dataset]() ADDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD
+* [Link to dataset]() WILL BE ADDED SOON
 * [Link to BEV images](https://we.tl/t-kksWzqmSkx)
 * [Link to inferences](https://we.tl/t-B4y6aSZYlg)
 
