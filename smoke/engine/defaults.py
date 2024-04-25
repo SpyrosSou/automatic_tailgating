@@ -51,7 +51,7 @@ def default_setup(cfg, args):
     logger = setup_logger(output_dir, rank)
     logger.info("Using {} GPUs".format(args.num_gpus))
     logger.info("Collecting environment info")
-    logger.info("\n" + collect_env_info())
+    # logger.info("\n" + collect_env_info())  # commented out because debugger fails when this is used, normal exe runs properly either way
     logger.info(args)
 
     logger.info("Loaded configuration file {}".format(args.config_file))

@@ -253,8 +253,8 @@ class DCNPooling(DCNv2Pooling):
                 nn.Linear(self.deform_fc_dim, self.pooled_size *
                           self.pooled_size * 3)
             )
-            self.offset_mask_fc[4].weight.data.zero_()
-            self.offset_mask_fc[4].bias.data.zero_()
+            self.offset_mask_fc[4].weight.label_data.zero_()
+            self.offset_mask_fc[4].bias.label_data.zero_()
 
     def forward(self, input, rois):
         offset = input.new()
