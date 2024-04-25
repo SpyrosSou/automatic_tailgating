@@ -99,9 +99,9 @@ def main():
     print(tailgate_parameters)
 
     # Save tailgating data to csv. TODO: include image name
-    tailgating_storer = TailgatingParametersCSVWriter(tailgate_analysis.tailgating_parameters,
-                                                      output_dir='/home/spyros/Spyros/temp_repos/SMOKE/output_tailgating')
-    tailgating_storer.write_to_csv(filename='Tailgating_Results')
+    # tailgating_storer = TailgatingParametersCSVWriter(tailgate_analysis.tailgating_parameters,
+    #                                                   output_dir='/home/spyros/Spyros/temp_repos/SMOKE/output_tailgating')
+    # tailgating_storer.write_to_csv(filename='Tailgating_Results')
 
 
 if __name__ == "__main__":

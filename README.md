@@ -1,4 +1,4 @@
-# Automatic Tailgating Detection Pipeline
+# Automatic Tailgating Detection Pipeline - Network
 
 This repo was constructed for the purpose of automatic tailgating detection via a 3D bounding box network, [SMOKE](https://github.com/lzccccc/SMOKE), the Single-Stage Monocular 3D Object Detection via Keypoint Estimation. The official implementation was slightly altered to accommodate later versions of cuda (cuda 11.8), and allow for inference on the [KITTI dataset](https://www.cvlibs.net/datasets/kitti/). The original paper [SMOKE: Single-Stage Monocular 3D Object Detection via Keypoint Estimation](https://arxiv.org/pdf/2002.10111.pdf) introduces the network and other relevant metrics.
 
