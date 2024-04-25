@@ -1,102 +1,204 @@
-# SMOKE: Single-Stage Monocular 3D Object Detection via Keypoint Estimation
+# Automatic Tailgating Detection Pipeline
 
-<img align="center" src="figures/animation.gif" width="750">
-
-[Video](https://www.youtube.com/watch?v=pvM_bASOQmo)
-
-This repository is the official implementation of our paper [SMOKE: Single-Stage Monocular 3D Object Detection via Keypoint Estimation](https://arxiv.org/pdf/2002.10111.pdf).
-For more details, please see our paper.
+This repo was constructed for the purpose of automatic tailgating detection via a 3D bounding box network, [SMOKE](https://github.com/lzccccc/SMOKE), the Single-Stage Monocular 3D Object Detection via Keypoint Estimation. The official implementation was slightly altered to accommodate later versions of cuda (cuda 11.8), and allow for inference on the [KITTI dataset](https://www.cvlibs.net/datasets/kitti/). The original paper [SMOKE: Single-Stage Monocular 3D Object Detection via Keypoint Estimation](https://arxiv.org/pdf/2002.10111.pdf) introduces the network and other relevant metrics.
 
 ## Introduction
-SMOKE is a **real-time** monocular 3D object detector for autonomous driving. 
-The runtime on a single NVIDIA TITAN XP GPU is **~30ms**. 
-Part of the code comes from [CenterNet](https://github.com/xingyizhou/CenterNet), 
-[maskrcnn-benchmark](https://github.com/facebookresearch/maskrcnn-benchmark),
-and [Detectron2](https://github.com/facebookresearch/detectron2).
 
-The performance on KITTI 3D detection (3D/BEV) is as follows:
+The implementation on this repo is a slightly adjusted version of the original version, with the main focus being visualisation functions and the introduction of automatic tailgating techniques. For the tailgating functions, please refer to the tailgating [README](tailgating_functions/README.md).
 
-|             |     Easy      |    Moderate    |     Hard     |
-|-------------|:-------------:|:--------------:|:------------:|
-| Car         | 14.17 / 21.08 | 9.88 / 15.13   | 8.63 / 12.91 | 
-| Pedestrian  | 5.16  / 6.22  | 3.24 / 4.05    | 2.53 / 3.38  | 
-| Cyclist     | 1.11  / 1.62  | 0.60 / 0.98    | 0.47 / 0.74  |
+The SMOKE network is capable of detecting Cars, Cyclists, and Pedestrians using a monocular input, with 3D bounding boxes being generated. Visualisation functions were adjusted from the [KITTI Object Visualisation Suite](https://github.com/kuixu/kitti_object_vis) to allow for BEV figures, as seen below.
 
-The pretrained weights can be downloaded [here](https://drive.google.com/open?id=11VK8_HfR7t0wm-6dCNP5KS3Vh-Qm686-).
+![BEV1](figures/000007.png)
+
+![BEV2](figures/000017.png)
+
+
+
+-----------------------------------------------------------------------------
 
 ## Requirements
-All codes are tested under the following environment:
-*   Ubuntu 16.04
-*   Python 3.7
-*   Pytorch 1.3.1
-*   CUDA 10.0
+The current implementation was deployed using:
 
-## Dataset
-We train and test our model on official [KITTI 3D Object Dataset](http://www.cvlibs.net/datasets/kitti/eval_object.php?obj_benchmark=3d). 
-Please first download the dataset and organize it as following structure:
+* Ubuntu 20.4
+* Python 3.8
+* Pytorch 2.2
+* CUDA 11.8
+
+The complete conda environment can be copied by using the [environment file](conda_envs/tailgating.yml) and running
+the command:
+
+```
+conda env create -f tailgating.yml
+```
+
+Unlike the original SMOKE, the pytorch version is updated in this implementation. The files used to build the project
+have been accordingly altered. However, if you wish to run using a different pytorch version, you can use the [torch download website](https://pytorch.org/get-started/locally/) to help you choose the appropriate command for installation. In the case
+of the requirements listed here, the command is shown below. Use this if you come across any issues with the environment.
+
+
+```
+conda install pytorch torchvision torchaudio pytorch-cuda=11.8 -c pytorch -c nvidia
+```
+
+-----------------------------------------------------------------------------
+## File Setup
+
+The file setup in this project is shown below:
+
+```
+Root
+│──datasets
+│    ├──kitti
+└──smoke
+     ├──config
+     ├──csrc
+     └──data
+        ...
+└──outputs
+└──tailgating_functions
+└──tools
+      ├──logs
+            ├──inference
+                  ├──kitti_test
+                        ├──data
+                              ├──Testing_results.txt
+└──utils
+└──weights
+      ├──Weight_file.pth
+```  
+
+One point to make is that when running evaluation (i.e. predicting car locations), the results will be stored under
+the "data" folder in "tools". The inferences are in the form of KITTI labels, with one txt file per image. The structure
+of the labels is as follows:
+
+```
+<object_type> <truncation> <occlusion> <alpha> <left> <top> <right> <bottom> <height> <width> <length> <x> <y> <z> <rotation_y>
+```
+
+An explanation of the labels is shown in the table below. A detailed analysis of the KITTI labels, along with coordinate frames
+used for localisation can be found in [Source 1](https://medium.com/@abdulhaq.ah/explain-label-file-of-kitti-dataset-738528de36f4), [Source 2](https://towardsdatascience.com/kitti-coordinate-transformations-125094cd42fb).
+
+![Kitti dataset labels](figures/kitti_dataset_labels.png)
+
+Also note, if you want to run inference directly, you can download the weights (.pth file) and place the file in the "weights" directory. Having established this, some explanation is needed regarding the dataset.
+
+
+### Dataset Structure
+
+The dataset is taken from KITTI, but a download link will be made available below in order to copy and paste the exact data
+structure in your local repository. Firstly, the dataset placed in the datasets folder **must** be called "kitti", as it is
+hardcoded this way by the authors. It needs a training and testing directory, and the names of the subfolders need to be the
+same as seen below
+
 ```
 kitti
 │──training
-│    ├──calib 
-│    ├──label_2 
+│    ├──calib
+│    ├──label_2
 │    ├──image_2
 │    └──ImageSets
 └──testing
-     ├──calib 
+     ├──calib
      ├──image_2
      └──ImageSets
 ```  
 
+Note, the ImageSets directory contains txt files that describe which files must be used for training and testing. If you want to e.g. test
+the network on a few images, go into /testing/ImageSets/test.txt and only include the names of the images you want to test.
+Again, you can download the exact dataset below and should be able to run the code without any changes. Also note, the
+testing dataset includes 7518 images. A link has been set up to download the predictions for each image produced using this
+network. Finally, a link to some BEV images (explanation later in this README) have been produced for the first 600 images of the testing dataset, but you can produce those locally as well.
+
+-----------------------------------------------------------------------------
+## Download Links
+
+* [Link to weights (.pth file)](https://we.tl/t-yHCbOhWDx3)
+* [Link to dataset]() ADDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD
+* [Link to BEV images](https://we.tl/t-kksWzqmSkx)
+* [Link to inferences](https://we.tl/t-B4y6aSZYlg)
+
+(Links created via wetransfer on 25 April 2024 and expire after a month. Please email spyros.souipas@outlook.com if you need the links past expiration date.)
+-----------------------------------------------------------------------------
 ## Setup
-1. We use `conda` to manage the environment:
+1. Clone this repository:
 ```
-conda create -n SMOKE python=3.7
-```
-
-2. Clone this repo:
-```
-git clone https://github.com/lzccccc/SMOKE
+git clone https://github.com/SpyrosSou/automatic_tailgating
 ```
 
-3. Build codes:
+2. Create the conda env:
 ```
+cd /path/to/repo/conda_envs
+conda env create -f tailgating.yml
+conda activate tailgating
+```
+
+3. Build the project:
+```
+cd /path/to/repo
 python setup.py build develop
 ```
 
-4. Link to dataset directory:
+4. Copy the downloaded dataset in datasets/kitti directory. Optionally, you can create a link to where you have the
+"kitti" folder (downloaded using the above links):
 ```
-mkdir datasets
-ln -s /path_to_kitti_dataset datasets/kitti
+cd /path/to/repo/datasets
+ln -s /path/to/downloaded/kitti datasets/kitti
 ```
 
-## Getting started
-First check the config file under `configs/`. 
+-----------------------------------------------------------------------------
+## Getting Started
 
-We train the model on 4 GPUs with 32 batch size:
-```
-python tools/plain_train_net.py --num-gpus 4 --config-file "configs/smoke_gn_vector.yaml"
-```
+First check the config file under `configs/`. You can tune the parameters of training/test. **Note**, this is also where you
+should change the path to the .pth file if you want to run evaluation.
+
 
 For single GPU training, simply run:
 ```
 python tools/plain_train_net.py --config-file "configs/smoke_gn_vector.yaml"
 ```
 
-We currently only support single GPU testing:
+For GPU testing:
 ```
 python tools/plain_train_net.py --eval-only --config-file "configs/smoke_gn_vector.yaml"
 ```
 
-## Acknowledgement
-[CenterNet](https://github.com/xingyizhou/CenterNet)
+As mentioned, testing will generate txt files under "/path/to/repo/tools/logs/inference/kitti_test/data". These
+files will then be used to generate BEV images, as well as tailgating analysis.
 
-[maskrcnn-benchmark](https://github.com/facebookresearch/maskrcnn-benchmark)
+-----------------------------------------------------------------------------
+## Visualisations
 
-[Detectron2](https://github.com/facebookresearch/detectron2)
+After testing the network and generating the txt files, you can visualise the results. To do so, run:
 
+```
+cd utils
+python visualization3Dbox.py --labels False --save True --dataset testing --path /output/images/path
+```
+
+You can edit the default flags in lines 346-353 of the code. In addition, you can specify the range of images you want
+to generate BEV images for. This is done in lines 343-344, where you define the start and end images, and the code will
+create BEV for all images within this range and store them to the "path" argument. Note, the "labels" argument notifies
+the code that you do not have the ground truths, which is the case for the testing dataset. If you run on training dataset
+and your dataset directory is structure correctly, you can set --labels True and run the ground truth visualisations too.
+
+In the download links, the first 600 BEV images of the testing dataset can be downloaded. Examples of inferences are seen
+below:
+
+![BEV3](figures/000018.png)
+
+![BEV4](figures/000019.png)
+
+-----------------------------------------------------------------------------
+## Acknowledgements
+
+* [SMOKE](https://github.com/lzccccc/SMOKE)
+* [KITTI Object Visualisation Suite](https://github.com/kuixu/kitti_object_vis)
+
+
+-----------------------------------------------------------------------------
 
 ## Citations
-Please cite our paper if you find SMOKE is helpful for your research.
+Please cite the paper if you find SMOKE is helpful for your research.
 ```
 @article{liu2020SMOKE,
   title={{SMOKE}: Single-Stage Monocular 3D Object Detection via Keypoint Estimation},
