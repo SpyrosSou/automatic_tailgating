@@ -109,3 +109,84 @@ def calculate_max_speed_difference_two_second_rule(distance_meters):
     max_speed_difference_kmh = (distance_km / time_gap_seconds) * 3600
 
     return max_speed_difference_kmh
+
+
+def pretty_print_dict(dct):
+    """
+    Used to print longer dictionaries more nicely. If a list of dictionaries is past, function iterates across elements
+
+    TODO: fix so that it works with strings and not only integers
+    Parameters
+    ----------
+    dct: dictionary to be printed
+
+    Returns
+    -------
+
+    """
+
+    if type(dct) == list:
+        for individual_dict in dct:
+            # take empty string
+            pretty_dict = ''
+
+            # get items for dict
+            for k, v in individual_dict.items():
+                pretty_dict += f'{k}: \n'
+                for value in v:
+                    pretty_dict += f'    {value}: {v[value]}\n'
+            # return result
+            print(pretty_dict)
+
+        else:
+            # take empty string
+            pretty_dict = ''
+
+            # get items for dict
+            for k, v in dct.items():
+                pretty_dict += f'{k}: \n'
+                for value in v:
+                    pretty_dict += f'    {value}: {v[value]}\n'
+            # return result
+            print(pretty_dict)
+
+
+def print_list_of_dicts(list_of_dicts, indent: int = 0, subdir_title: str = "Dictionary"):
+    """
+    Iterates across a list of dictionaries and prints out the contents nicely
+    Parameters
+    ----------
+    list_of_dicts: list of dictionaries to be printed
+    indent: indentation level of nested dictionaries
+    subdir_title: The "title" printed in each subdictionary
+
+
+    Returns
+    -------
+
+    """
+    for idx, dictionary in enumerate(list_of_dicts):
+        print(subdir_title, idx + 1)
+        print_dict(dictionary, indent)
+        print()
+
+
+def print_dict(dictionary, indent: int = 0):
+    """
+    Prints out a dictionary in a nice manner
+    Parameters
+    ----------
+    dictionary: The dictionary to be printed
+    indent: indentation level of nested dictionaries
+
+    Returns
+    -------
+
+    """
+    for key, value in dictionary.items():
+        if isinstance(value, dict):
+            print("  " * indent + str(key) + ":")
+            print_dict(value, indent + 1)
+        else:
+            print("  " * indent + str(key) + ": " + str(value))
+

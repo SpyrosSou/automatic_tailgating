@@ -8,6 +8,13 @@ chosen_image = image_names[NUMBER]
 
 Ultimately, the dictionary tailgate_parameters contains all the car pairs noted in the images, with the maximum
 speed difference calculated where applicable.
+
+To run this code:
+
+1) Set the image index you want to visualise
+2) Set angular threshold for function filter_by_relative_rotation
+3) Set perpendicular distance threshold for function filter_tailgating_by_lane
+4) (Optional) Uncomment the save function at the end of main() and change directory for saving
 """
 
 try:
@@ -20,8 +27,24 @@ try:
     from TailgateVisualisation import TailgateVisualisation
     from TailgatingStorage import TailgatingParametersCSVWriter
 
+    from helper_functions import print_list_of_dicts
+
 except ImportError as e:
     raise e
+
+
+# 16 is a good example of cars initially "moving" in opposite directions
+# 6 is a good example of 2 cars on same lane in same ...
+# ...direction - USE TO CATCH ERRORS IN PLOTTING, E.G. IF YOU USE THRESHOLD OF 2 YOU GET NO PAIRS AT ALL
+# 7 is good example of multiple cars in same direction - USE AS PRIMARY EXAMPLE
+# 25 is cars all over and kinda breaks the directions - USE TO EXPLORE FILTERING BASED ON ANGLES.
+# 24 is a good example of one car moving towards the camera
+# 46 is a single pedestrian and will not run TODO: stop like you do in picture 24
+# 47 is another nice example of multiple cars
+CHOSEN_IMAGE_INDEX = 24
+
+ANGLE_THRESHOLD = np.pi / 6  # radians
+DISTANCE_THRESHOLD = 1  # meters
 
 
 def load_images_and_labels():
@@ -33,14 +56,7 @@ def load_images_and_labels():
     inference_dict = label_loader.get_inference_dictionary()
     image_names = label_loader.get_valid_image_names()
 
-    # 16 is a good example of cars initially "moving" in opposite directions
-    # 6 is a good example of 2 cars on same lane in same ...
-    # ...direction - USE TO CATCH ERRORS IN PLOTTING, E.G. IF YOU USE THRESHOLD OF 2 YOU GET NO PAIRS AT ALL
-    # 7 is good example of multiple cars in same direction - USE AS PRIMARY EXAMPLE
-    # 25 is cars all over and kinda breaks the directions - USE TO EXPLORE FILTERING BASED ON ANGLES.
-    # 24 is a good example of one car moving towards the camera
-    # 46 is a single pedestrian
-    chosen_image = image_names[7]
+    chosen_image = image_names[CHOSEN_IMAGE_INDEX]
     img_name = label_loader.get_image_path(chosen_image)
     print(f'examined image is {img_name}')
 
@@ -56,7 +72,7 @@ def load_images_and_labels():
     arranged_inferences = label_processor.get_parsed_data()
 
     image_data = label_processor.get_image_data(chosen_image)  # Prints all labels of chosen image
-    print(image_data)
+    print_list_of_dicts(image_data, indent=1, subdir_title='Detected Object Parameters')
 
     return chosen_image, arranged_inferences
 
@@ -81,10 +97,10 @@ def main():
     # tailgate_analysis.plot_paired_cases_filtered_directions(chosen_image)
 
     # Filters out pairs of cars whose directions of motion exceed an angular difference of angular_threshold
-    tailgate_analysis.filter_by_relative_rotation(angular_threshold=np.pi / 6)
+    tailgate_analysis.filter_by_relative_rotation(angular_threshold=ANGLE_THRESHOLD)
 
     # This is where tailgating checks begin, first by checking if the cars are in the same "lane"
-    tailgate_analysis.filter_tailgating_by_lane(threshold=1)  # Filters out pairs not in the same "lane"
+    tailgate_analysis.filter_tailgating_by_lane(threshold=DISTANCE_THRESHOLD)  # Filters out pairs not in the same "lane"
     tailgate_analysis.plot_lane_distances(chosen_image)
 
     # Detects the distance between the pairs of cars that can be tailgating
@@ -96,7 +112,8 @@ def main():
 
     tailgate_analysis.calculate_tailgating_speed_limits()  # Calculates the maximum speed difference between cars
     tailgate_parameters = tailgate_analysis.get_tailgating_parameters(chosen_image)
-    print(tailgate_parameters)
+    print("----------------------------------------------------------------------")
+    print_list_of_dicts(tailgate_parameters, indent=1, subdir_title='Car Pairs')
 
     # Save tailgating data to csv. TODO: include image name
     # tailgating_storer = TailgatingParametersCSVWriter(tailgate_analysis.tailgating_parameters,

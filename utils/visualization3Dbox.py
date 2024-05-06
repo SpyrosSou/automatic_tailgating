@@ -340,8 +340,8 @@ def main(args):
 
 
 if __name__ == '__main__':
-    start_frame = 501
-    end_frame = 600
+    start_frame = 601
+    end_frame = 800
 
     parser = argparse.ArgumentParser(description='Visualize 3D bounding box on images',
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
