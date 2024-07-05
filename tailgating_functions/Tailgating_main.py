@@ -8,13 +8,6 @@ chosen_image = image_names[NUMBER]
 
 Ultimately, the dictionary tailgate_parameters contains all the car pairs noted in the images, with the maximum
 speed difference calculated where applicable.
-
-To run this code:
-
-1) Set the image index you want to visualise
-2) Set angular threshold for function filter_by_relative_rotation
-3) Set perpendicular distance threshold for function filter_tailgating_by_lane
-4) (Optional) Uncomment the save function at the end of main() and change directory for saving
 """
 
 try:
@@ -28,10 +21,8 @@ try:
     from TailgatingStorage import TailgatingParametersCSVWriter
 
     from helper_functions import print_list_of_dicts
-
 except ImportError as e:
     raise e
-
 
 # 16 is a good example of cars initially "moving" in opposite directions
 # 6 is a good example of 2 cars on same lane in same ...
@@ -39,13 +30,13 @@ except ImportError as e:
 # 7 is good example of multiple cars in same direction - USE AS PRIMARY EXAMPLE
 # 25 is cars all over and kinda breaks the directions - USE TO EXPLORE FILTERING BASED ON ANGLES.
 # 24 is a good example of one car moving towards the camera
-# 46 is a single pedestrian and will not run TODO: stop like you do in picture 24
-# 47 is another nice example of multiple cars
-CHOSEN_IMAGE_INDEX = 24
+# 46 is a single pedestrian and will not run TODO: terminate cases of only pedestrians like you do in image 24
+# 47 is also nice example TODO: figure out why possible_tailgating is yes but speed is not printed, it's because...
+#                               ... distance threshold function overwrites the angular stuff
 
-ANGLE_THRESHOLD = np.pi / 6  # radians
+CHOSEN_IMAGE_INDEX = 25
+ANGULAR_THRESHOLD = np.pi / 6  # radians
 DISTANCE_THRESHOLD = 1  # meters
-
 
 def load_images_and_labels():
 
@@ -96,12 +87,15 @@ def main():
     tailgate_analysis.filter_direction_of_motion()
     # tailgate_analysis.plot_paired_cases_filtered_directions(chosen_image)
 
-    # Filters out pairs of cars whose directions of motion exceed an angular difference of angular_threshold
-    tailgate_analysis.filter_by_relative_rotation(angular_threshold=ANGLE_THRESHOLD)
+    # # Filters out pairs of cars whose directions of motion exceed an angular difference of angular_threshold
+    # tailgate_analysis.filter_by_relative_rotation(angular_threshold=ANGULAR_THRESHOLD)
 
     # This is where tailgating checks begin, first by checking if the cars are in the same "lane"
     tailgate_analysis.filter_tailgating_by_lane(threshold=DISTANCE_THRESHOLD)  # Filters out pairs not in the same "lane"
     tailgate_analysis.plot_lane_distances(chosen_image)
+
+    # Filters out pairs of cars whose directions of motion exceed an angular difference of angular_threshold
+    tailgate_analysis.filter_by_relative_rotation(angular_threshold=ANGULAR_THRESHOLD)
 
     # Detects the distance between the pairs of cars that can be tailgating
     tailgate_analysis.detect_tailgating_distance()
@@ -112,8 +106,8 @@ def main():
 
     tailgate_analysis.calculate_tailgating_speed_limits()  # Calculates the maximum speed difference between cars
     tailgate_parameters = tailgate_analysis.get_tailgating_parameters(chosen_image)
-    print("----------------------------------------------------------------------")
-    print_list_of_dicts(tailgate_parameters, indent=1, subdir_title='Car Pairs')
+    print("------------------------------------------------------------------")
+    print_list_of_dicts(tailgate_parameters, indent=1, subdir_title='Car Pair')
 
     # Save tailgating data to csv. TODO: include image name
     # tailgating_storer = TailgatingParametersCSVWriter(tailgate_analysis.tailgating_parameters,
